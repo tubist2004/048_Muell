@@ -5,7 +5,6 @@ var xpath = require("xpath"),
 const ical = require("ical-generator");
 var moment = require("moment");
 
-
 moment.locale("de");
 
 http
@@ -122,9 +121,11 @@ http
         });
       });
       res.on("end", () => {
-        console.log(servreq.url);
         if (servreq.url == "/") {
           servres.write(calendar.toString()); //write a response to the client
+          console.log(
+            "fetched resource '/' to " + servres.socket.remoteAddress
+          );
         } else if (servreq.url == "/next") {
           servres.write(
             JSON.stringify(
@@ -138,16 +139,19 @@ http
                 .map((e) => {
                   if (e.date.isBefore(moment().endOf("day"))) {
                     e.text = "Heute: " + e.summary;
-                  }
-                  else if (e.date.isBefore(moment().endOf("day").add(1,"day"))){
+                  } else if (
+                    e.date.isBefore(moment().endOf("day").add(1, "day"))
+                  ) {
                     e.text = "Morgen: " + e.summary;
-                  }
-                  else {
+                  } else {
                     e.text = e.date.format("dddd") + ": " + e.summary;
                   }
                   return e;
                 })
             )
+          );
+          console.log(
+            "fetched resource '/next' to " + servres.socket.remoteAddress
           );
         }
         servres.end(); //end the response
