@@ -5,6 +5,9 @@ var xpath = require("xpath"),
 const ical = require("ical-generator");
 var moment = require("moment");
 
+
+moment.locale("de");
+
 http
   .createServer(function (servreq, servres) {
     const options = {
@@ -19,10 +22,11 @@ http
     var i = 0;
 
     const calendar = ical({ name: "Abfallkalender 2021" });
+    const entries = [];
 
     function getScriptCB(res) {
       res.on("data", (d) => {
-        console.log("script: " + regex.exec(d));
+        //console.log("script: " + regex.exec(d));
         options.path =
           "/?key=477b9513bc190ecec8582cac75d9f77f&modus=" + regex.exec(d);
         const req = https.request(options, getWurlCB);
@@ -32,7 +36,7 @@ http
 
     function getWurlCB(res) {
       res.on("data", (d) => {
-        console.log("Wurl: " + regex.exec(d));
+        //console.log("Wurl: " + regex.exec(d));
         options.path =
           "/?key=477b9513bc190ecec8582cac75d9f77f&modus=" +
           regex.exec(d) +
@@ -48,7 +52,7 @@ http
         str += d;
       });
       res.on("end", () => {
-        console.log("init: " + regex.exec(str));
+        //console.log("init: " + regex.exec(str));
         options.path =
           "/?key=477b9513bc190ecec8582cac75d9f77f&modus=" +
           regex.exec(str) +
@@ -91,7 +95,7 @@ http
         var doc = new dom().parseFromString(d);
         var nodes = xpath.select("//*[local-name(.)='p']", doc, false);
         nodes.forEach((node) => {
-          console.log("Name: " + node.childNodes[0]);
+          //console.log("Name: " + node.childNodes[0]);
           const dates = node.childNodes[2]
             .toString()
             .split(",")
@@ -110,12 +114,42 @@ http
                   },
                 ],
               });
+              entries.push({
+                date: d.add(1, "hour"),
+                summary: node.childNodes[0].toString(),
+              });
             });
         });
       });
       res.on("end", () => {
-        console.log(calendar.toString());
-        servres.write(calendar.toString()); //write a response to the client
+        console.log(servreq.url);
+        if (servreq.url == "/") {
+          servres.write(calendar.toString()); //write a response to the client
+        } else if (servreq.url == "/next") {
+          servres.write(
+            JSON.stringify(
+              entries
+                .filter((e) => {
+                  return e.date.isBetween(
+                    moment().startOf("day"),
+                    moment().endOf("day").add(5, "day")
+                  );
+                })
+                .map((e) => {
+                  if (e.date.isBefore(moment().endOf("day"))) {
+                    e.text = "Heute: " + e.summary;
+                  }
+                  else if (e.date.isBefore(moment().endOf("day").add(1,"day"))){
+                    e.text = "Morgen: " + e.summary;
+                  }
+                  else {
+                    e.text = e.date.format("dddd") + ": " + e.summary;
+                  }
+                  return e;
+                })
+            )
+          );
+        }
         servres.end(); //end the response
       });
     }
@@ -124,4 +158,3 @@ http
     req.end();
   })
   .listen(process.env.NODE_PORT); //the server object listens on port 8080
-
