@@ -20,7 +20,7 @@ http
 
     var i = 0;
 
-    const calendar = ical({ name: "Abfallkalender 2021" });
+    const calendar = ical({ name: "Abfallkalender 2024" });
     const entries = [];
 
     function getScriptCB(res) {
@@ -70,7 +70,7 @@ http
           "&f_id_abfalltyp_3=31" +
           "&f_abfallarten_index_max=4" +
           "&f_abfallarten=27%2C20%2C17%2C31" +
-          "&f_zeitraum=20220101-20221231" +
+          "&f_zeitraum=20240101-20251231" +
           "&f_export_als=%7B%27action%27%3A%27https%3A%2F%2Fapi.abfallplus.de%2F%3Fkey%3D477b9513bc190ecec8582cac75d9f77f%26modus%3D" +
           regex.exec(str) +
           "%26waction%3Dexport_txt%27%2C%27target%27%3A%27_blank%27%7D";
@@ -99,7 +99,7 @@ http
             .toString()
             .split(",")
             .forEach((d) => {
-              d = moment(d.trim() + ".2022", "DD.MM.YYYY");
+              d = moment(d.trim() + ".2024", "DD.MM.YYYY");
               calendar.createEvent({
                 start: d.add(1, "hour"),
                 summary: node.childNodes[0],
